@@ -34,6 +34,14 @@ MERGE_DIR='/path/to/final/merged/alignments/from/any/biological/replicates'
 MAPQ_FILTER=10
 
 
+echo "### Step 0: Check output directories exist & create them as needed"
+[ -d $RAW_DIR ] || mkdir -p $RAW_DIR
+[ -d $FILT_DIR ] || mkdir -p $FILT_DIR
+[ -d $TMP_DIR ] || mkdir -p $TMP_DIR
+[ -d $PAIR_DIR ] || mkdir -p $PAIR_DIR
+[ -d $REP_DIR ] || mkdir -p $REP_DIR
+[ -d $MERGE_DIR ] || mkdir -p $MERGE_DIR
+
 echo "### Step 1.A: FASTQ to BAM (1st)"
 $BWA mem -t 12 -B 8 $REF $IN_DIR/$SRA\_1.fastq.gz | $SAMTOOLS view -Sb - > $RAW_DIR/$SRA\_1.bam
 
@@ -66,7 +74,7 @@ java -Xmx2g -jar $PICARD AddOrReplaceReadGroups INPUT=$TMP_DIR/$SRA.bam OUTPUT=$
 #	java -Xms4G -Xmx4G -jar $PICARD MergeSamFiles $INPUTS_TECH_REPS OUTPUT=$TMP_DIR/$REP_LABEL.bam USE_THREADING=TRUE ASSUME_SORTED=TRUE VALIDATION_STRINGENCY=LENIENT
 
 echo "### Step 4: Mark duplicates"
-java -Xms24G -XX:-UseGCOverheadLimit -Xmx24G -jar $PICARD MarkDuplicates INPUT=$PAIR_DIR/$SRA.bam OUTPUT=$REP_DIR/$REP_LABEL.bam METRICS_FILE=$REP_DIR/metrics.$REP_LABEL.txt TMP_DIR=$TMP_DIR ASSUME_SORTED=TRUE VALIDATION_STRINGENCY=LENIENT REMOVE_DUPLICATE=TRUE
+java -Xms24G -XX:-UseGCOverheadLimit -Xmx24G -jar $PICARD MarkDuplicates INPUT=$PAIR_DIR/$SRA.bam OUTPUT=$REP_DIR/$REP_LABEL.bam METRICS_FILE=$REP_DIR/metrics.$REP_LABEL.txt TMP_DIR=$TMP_DIR ASSUME_SORTED=TRUE VALIDATION_STRINGENCY=LENIENT REMOVE_DUPLICATES=TRUE
 
 $SAMTOOLS index $REP_DIR/$REP_LABEL.bam 
 
