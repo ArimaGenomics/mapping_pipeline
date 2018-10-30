@@ -25,6 +25,7 @@ RAW_DIR='/path/to/write/out/bams'
 FILT_DIR='/path/to/write/out/filtered/bams'
 FILTER='/path/to/filter_five_end.pl'
 COMBINER='/path/to/two_read_bam_combiner.pl'
+STATS=’/path/to/get_stats.pl’
 PICARD='/software/picard/picard-2.6.0/build/libs/picard.jar'
 TMP_DIR='/path/to/write/out/temporary/files'
 PAIR_DIR='/path/to/write/out/paired/bams'
@@ -78,7 +79,9 @@ java -Xms24G -XX:-UseGCOverheadLimit -Xmx24G -jar $PICARD MarkDuplicates INPUT=$
 
 $SAMTOOLS index $REP_DIR/$REP_LABEL.bam 
 
-echo "Finished Mapping Pipeline"
+perl $STATS $REP_DIR/$REP_LABEL.bam > $REP_DIR/$REP_LABEL.bam.stats
+
+echo "Finished Mapping Pipeline through Duplicate Removal"
 
 #########################################################################################################################################
 ###                                       How to Accommodate Biological Replicates                                                    ###
@@ -93,5 +96,9 @@ echo "Finished Mapping Pipeline"
 #	java -Xms4G -Xmx4G -jar $PICARD MergeSamFiles $INPUTS_BIOLOGICAL_REPS OUTPUT=$MERGE_DIR/$LABEL.bam USE_THREADING=TRUE ASSUME_SORTED=TRUE VALIDATION_STRINGENCY=LENIENT
 #
 #	$SAMTOOLS index $MERGE_DIR/$LABEL.bam
+
+# perl $STATS $MERGE_DIR/$LABEL.bam > $MERGE_DIR/$LABEL.bam.stats
+
+# echo "Finished Mapping Pipeline through merging Biological Replicates"
 
 
