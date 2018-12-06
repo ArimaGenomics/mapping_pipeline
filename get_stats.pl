@@ -1,8 +1,8 @@
 #!/usr/bin/perl
 use strict;
 
-if ((scalar @ARGV) != 1) {print "please provide the <bamfile>\n"; exit;}
-open (FILE,"/projects/arima/Projects/RefFiles/software/samtools-0.1.18/samtools view $ARGV[0] |"); 
+if ((scalar @ARGV) != 1) {print "Please provide the <bamfile>\n"; exit;}
+open (FILE, "samtools view $ARGV[0] |"); 
 
 my $all; my $intra; my $inter; 
 my $intra_1; my $intra_10; my $intra_15; my $intra_20;
