@@ -16,6 +16,7 @@
 
 SRA='basename_of_fastq_files'
 LABEL='overall_exp_name'
+PREFIX='bwa_index_name'
 BWA='/software/bwa/bwa-0.7.12/bwa'
 SAMTOOLS='/software/samtools/samtools-1.3.1/samtools'
 IN_DIR='/path/to/gzipped/fastq/files'
@@ -33,7 +34,7 @@ REP_DIR='/path/to/where/you/want/deduplicated/files'
 REP_LABEL=$LABEL\_rep1
 MERGE_DIR='/path/to/final/merged/alignments/from/any/biological/replicates'
 MAPQ_FILTER=10
-
+CPU=24
 
 echo "### Step 0: Check output directories exist & create them as needed"
 [ -d $RAW_DIR ] || mkdir -p $RAW_DIR
@@ -43,20 +44,23 @@ echo "### Step 0: Check output directories exist & create them as needed"
 [ -d $REP_DIR ] || mkdir -p $REP_DIR
 [ -d $MERGE_DIR ] || mkdir -p $MERGE_DIR
 
+echo "### Step 0: Index reference"
+$BWA index -p $PREFIX $REF
+
 echo "### Step 1.A: FASTQ to BAM (1st)"
-$BWA mem -t 12 -B 8 $REF $IN_DIR/$SRA\_1.fastq.gz | $SAMTOOLS view -Sb - > $RAW_DIR/$SRA\_1.bam
+$BWA mem -t $CPU -B 8 $PREFIX $IN_DIR/$SRA\_1.fastq.gz | $SAMTOOLS view -@ $CPU -Sb - > $RAW_DIR/$SRA\_1.bam
 
 echo "### Step 1.B: FASTQ to BAM (2nd)"
-$BWA mem -t 12 -B 8 $REF $IN_DIR/$SRA\_2.fastq.gz | $SAMTOOLS view -Sb - > $RAW_DIR/$SRA\_2.bam
+$BWA mem -t $CPU -B 8 $PREFIX $IN_DIR/$SRA\_2.fastq.gz | $SAMTOOLS view -@ $CPU -Sb - > $RAW_DIR/$SRA\_2.bam
 
 echo "### Step 2.A: Filter 5' end (1st)"
-$SAMTOOLS view -h $RAW_DIR/$SRA\_1.bam | perl $FILTER | $SAMTOOLS view -Sb - > $FILT_DIR/$SRA\_1.bam
+$SAMTOOLS view -h $RAW_DIR/$SRA\_1.bam | perl $FILTER | $SAMTOOLS view -@ $CPU -Sb - > $FILT_DIR/$SRA\_1.bam
 
 echo "### Step 2.B: Filter 5' end (2nd)"
-$SAMTOOLS view -h $RAW_DIR/$SRA\_2.bam | perl $FILTER | $SAMTOOLS view -Sb - > $FILT_DIR/$SRA\_2.bam
+$SAMTOOLS view -h $RAW_DIR/$SRA\_2.bam | perl $FILTER | $SAMTOOLS view -@ $CPU -Sb - > $FILT_DIR/$SRA\_2.bam
 
 echo "### Step 3A: Pair reads & mapping quality filter"
-perl $COMBINER $FILT_DIR/$SRA\_1.bam $FILT_DIR/$SRA\_2.bam $SAMTOOLS $MAPQ_FILTER | $SAMTOOLS view -bS -t $FAIDX - | $SAMTOOLS sort -o $TMP_DIR/$SRA.bam -
+perl $COMBINER $FILT_DIR/$SRA\_1.bam $FILT_DIR/$SRA\_2.bam $SAMTOOLS $MAPQ_FILTER | $SAMTOOLS view -@ $CPU -bS -t $FAIDX - | $SAMTOOLS sort -o $TMP_DIR/$SRA.bam -
 
 echo "### Step 3.B: Add read group"
 java -Xmx2g -jar $PICARD AddOrReplaceReadGroups INPUT=$TMP_DIR/$SRA.bam OUTPUT=$PAIR_DIR/$SRA.bam ID=$SRA LB=$SRA SM=$LABEL PL=ILLUMINA PU=none
