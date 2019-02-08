@@ -1,40 +1,44 @@
 #!/usr/bin/perl
 use strict;
 
-if ((scalar @ARGV) != 1) {print "Please provide the <bamfile>\n"; exit;}
-open (FILE, "samtools view $ARGV[0] |"); 
-
-my $all; my $intra; my $inter; 
-my $intra_1; my $intra_10; my $intra_15; my $intra_20;
-while (my $line = <FILE>)
-{ chomp $line;
-  my @liner = split('\t',$line);
-  $all++;
-
-  if ($liner[6] eq '=')
-  {$intra++; 
-   if (abs($liner[8]) >= 1000)  {$intra_1++;}
-   if (abs($liner[8]) >= 10000)  {$intra_10++;}
-   if (abs($liner[8]) >= 15000) {$intra_15++;}
-   if (abs($liner[8]) >= 20000) {$intra_20++;}
-  }
-  else {$inter++;}
-
+if ((scalar @ARGV) != 1){
+    print("Please provide the <bamfile>\n");
+    exit;
 }
-close FILE;
+open(FILE, "samtools view $ARGV[0] |");
+
+my ($all, $intra, $inter);
+my ($intra_1, $intra_10, $intra_15, $intra_20);
+while (my $line = <FILE>){
+    chomp $line;
+    my @liner = split('\t', $line);
+    $all++;
+
+    if ($liner[6] eq '='){
+        $intra++;
+        if (abs($liner[8]) >= 1000) {$intra_1++;}
+        if (abs($liner[8]) >= 10000) {$intra_10++;}
+        if (abs($liner[8]) >= 15000) {$intra_15++;}
+        if (abs($liner[8]) >= 20000) {$intra_20++;}
+    }
+    else{
+        $inter++;
+    }
+}
+close(FILE);
 
 $all      = $all/2;
-$intra    = $intra/2; 
-$intra_1  = $intra_1/2;  
-$intra_10  = $intra_10/2;  
+$intra    = $intra/2;
+$intra_1  = $intra_1/2;
+$intra_10 = $intra_10/2;
 $intra_15 = $intra_15/2;
-$intra_20 = $intra_20/2;  
+$intra_20 = $intra_20/2;
 $inter    = $inter/2;
 
-print "All            $all\n";
-print "All intra      $intra\n";
-print "All intra 1kb  $intra_1\n";
-print "All intra 10kb $intra_10\n";
-print "All intra 15kb $intra_15\n";
-print "All intra 20kb $intra_20\n";
-print "All inter      $inter\n";
+print("All\t$all\n");
+print("All intra\t$intra\n");
+print("All intra 1kb\t$intra_1\n");
+print("All intra 10kb\t$intra_10\n");
+print("All intra 15kb\t$intra_15\n");
+print("All intra 20kb\t$intra_20\n");
+print("All inter\t$inter\n");
