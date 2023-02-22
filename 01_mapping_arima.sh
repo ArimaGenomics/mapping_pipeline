@@ -1,14 +1,14 @@
 #! /bin/bash
 
 ##############################################
-# ARIMA GENOMICS MAPPING PIPELINE 02/08/2019 #
+# ARIMA GENOMICS MAPPING PIPELINE 2023-02-22 #
 ##############################################
 
-#Below find the commands used to map HiC data.
+# Below find the commands used to map HiC data.
 
-#Replace the variables at the top with the correct paths for the locations of files/programs on your system.
+# Replace the variables at the top with the correct paths for the locations of files/programs on your system.
 
-#This bash script will map one paired end HiC dataset (read1 & read2 fastqs). Feel to modify and multiplex as you see fit to work with your volume of samples and system.
+# This bash script will map one paired end HiC dataset (read1 & read2 fastqs). Feel free to modify and multiplex as you see fit to work with your volume of samples and system.
 
 ##########################################
 # Commands #
@@ -44,7 +44,8 @@ echo "### Step 0: Check output directories exist & create them as needed"
 [ -d $REP_DIR ] || mkdir -p $REP_DIR
 [ -d $MERGE_DIR ] || mkdir -p $MERGE_DIR
 
-echo "### Step 0: Index reference" # Run only once! Skip this step if you have already generated BWA index files
+# Run only once! Skip this step if you have already generated BWA index files
+echo "### Step 0: Index reference"
 $BWA index -a bwtsw -p $PREFIX $REF
 
 echo "### Step 1.A: FASTQ to BAM (1st)"
@@ -63,7 +64,7 @@ echo "### Step 3A: Pair reads & mapping quality filter"
 perl $COMBINER $FILT_DIR/$SRA\_1.bam $FILT_DIR/$SRA\_2.bam $SAMTOOLS $MAPQ_FILTER | $SAMTOOLS view -bS -t $FAIDX - | $SAMTOOLS sort -@ $CPU -o $TMP_DIR/$SRA.bam -
 
 echo "### Step 3.B: Add read group"
-java -Xmx4G -Djava.io.tmpdir=temp/ -jar $PICARD AddOrReplaceReadGroups INPUT=$TMP_DIR/$SRA.bam OUTPUT=$PAIR_DIR/$SRA.bam ID=$SRA LB=$SRA SM=$LABEL PL=ILLUMINA PU=none
+java -Xmx4G -Djava.io.tmpdir=temp/ -jar $PICARD AddOrReplaceReadGroups --INPUT $TMP_DIR/$SRA.bam --OUTPUT $PAIR_DIR/$SRA.bam --ID $SRA --LB $SRA --SM $LABEL --PL ILLUMINA --PU none
 
 ###############################################################################################################################################################
 ###                                           How to Accommodate Technical Replicates                                                                       ###
@@ -75,11 +76,11 @@ java -Xmx4G -Djava.io.tmpdir=temp/ -jar $PICARD AddOrReplaceReadGroups INPUT=$TM
 #	REP_NUM=X #number of the technical replicate set e.g. 1
 #	REP_LABEL=$LABEL\_rep$REP_NUM
 #	INPUTS_TECH_REPS=('bash' 'array' 'of' 'bams' 'from' 'replicates') #BAM files you want combined as technical replicates
-#   example bash array - INPUTS_TECH_REPS=('INPUT=A.L1.bam' 'INPUT=A.L2.bam' 'INPUT=A.L3.bam')
-#	java -Xmx8G -Djava.io.tmpdir=temp/ -jar $PICARD MergeSamFiles $INPUTS_TECH_REPS OUTPUT=$TMP_DIR/$REP_LABEL.bam USE_THREADING=TRUE ASSUME_SORTED=TRUE VALIDATION_STRINGENCY=LENIENT
+#   example bash array - INPUTS_TECH_REPS=('--INPUT A.L1.bam' '--INPUT A.L2.bam' '--INPUT A.L3.bam')
+#	java -Xmx8G -Djava.io.tmpdir=temp/ -jar $PICARD MergeSamFiles $INPUTS_TECH_REPS --OUTPUT $TMP_DIR/$REP_LABEL.bam --USE_THREADING true --ASSUME_SORTED true --VALIDATION_STRINGENCY LENIENT
 
 echo "### Step 4: Mark duplicates"
-java -Xmx30G -XX:-UseGCOverheadLimit -Djava.io.tmpdir=temp/ -jar $PICARD MarkDuplicates INPUT=$PAIR_DIR/$SRA.bam OUTPUT=$REP_DIR/$REP_LABEL.bam METRICS_FILE=$REP_DIR/metrics.$REP_LABEL.txt TMP_DIR=$TMP_DIR ASSUME_SORTED=TRUE VALIDATION_STRINGENCY=LENIENT REMOVE_DUPLICATES=TRUE
+java -Xmx30G -XX:-UseGCOverheadLimit -Djava.io.tmpdir=temp/ -jar $PICARD MarkDuplicates --INPUT $PAIR_DIR/$SRA.bam --OUTPUT $REP_DIR/$REP_LABEL.bam --METRICS_FILE $REP_DIR/metrics.$REP_LABEL.txt --TMP_DIR $TMP_DIR --ASSUME_SORTED true --VALIDATION_STRINGENCY LENIENT --REMOVE_DUPLICATES true
 
 $SAMTOOLS index $REP_DIR/$REP_LABEL.bam
 
@@ -95,9 +96,9 @@ echo "Finished Mapping Pipeline through Duplicate Removal"
 #########################################################################################################################################
 #
 #	INPUTS_BIOLOGICAL_REPS=('bash' 'array' 'of' 'bams' 'from' 'replicates') #BAM files you want combined as biological replicates
-#   example bash array - INPUTS_BIOLOGICAL_REPS=('INPUT=A_rep1.bam' 'INPUT=A_rep2.bam' 'INPUT=A_rep3.bam')
+#   example bash array - INPUTS_BIOLOGICAL_REPS=('--INPUT A_rep1.bam' '--INPUT A_rep2.bam' '--INPUT A_rep3.bam')
 #
-#	java -Xmx8G -Djava.io.tmpdir=temp/ -jar $PICARD MergeSamFiles $INPUTS_BIOLOGICAL_REPS OUTPUT=$MERGE_DIR/$LABEL.bam USE_THREADING=TRUE ASSUME_SORTED=TRUE VALIDATION_STRINGENCY=LENIENT
+#	java -Xmx8G -Djava.io.tmpdir=temp/ -jar $PICARD MergeSamFiles $INPUTS_BIOLOGICAL_REPS --OUTPUT $MERGE_DIR/$LABEL.bam --USE_THREADING true --ASSUME_SORTED true --VALIDATION_STRINGENCY LENIENT
 #
 #	$SAMTOOLS index $MERGE_DIR/$LABEL.bam
 
