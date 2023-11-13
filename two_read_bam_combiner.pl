@@ -100,8 +100,8 @@ MAIN : {
         my $new_flag2 = bin2dec($new_bin2);
 
         unless ($trouble == 1){
-            print(join("\t", $id1, $new_flag1, $chr_from1, $loc_from1, $mapq1, $cigar1, $chr_from2, $loc_from2, $dist1, $read1, $read_qual1, @rest1) . "\n");
-            print(join("\t", $id2, $new_flag2, $chr_from2, $loc_from2, $mapq2, $cigar2, $chr_from1, $loc_from1, $dist2, $read2, $read_qual2, @rest2) . "\n");
+            print(join("\t", $id1, $new_flag1, $chr_from1, $loc_from1, $mapq1, $cigar1, ($chr_from2 eq $chr_from1 ? '=' : $chr_from2), $loc_from2, $dist1, $read1, $read_qual1, @rest1) . "\n");
+            print(join("\t", $id2, $new_flag2, $chr_from2, $loc_from2, $mapq2, $cigar2, ($chr_from1 eq $chr_from2 ? '=' : $chr_from1), $loc_from1, $dist2, $read2, $read_qual2, @rest2) . "\n");
         }
         $line1 = <FILE1>;
         $line2 = <FILE2>;
